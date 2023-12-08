@@ -1,1 +1,793 @@
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Definição da estrutura para representar uma passagem
+typedef struct {
+  int ID;
+  char codigoOrigem[4];
+  char codigoDestino[4];
+  char cidadeOrigem[50];
+  char cidadeDestino[50];
+  char data[11];       // DD/MM/YYYY
+  char horaPartida[6]; // HH:mm
+  char horaChegada[6]; // HH:mm
+  float valorPassagem;
+} Passagem;
+
+// // // ---------------------------------------------------->
+
+// Funções de validação
+
+// Função para validar o formato da data (DD/MM/YYYY)
+int validarData(const char *data) {
+  int dia, mes, ano;
+  if (sscanf(data, "%d/%d/%d", &dia, &mes, &ano) != 3) {
+    printf("\n\t\t\tFormato de data inválido. Use o formato DD/MM/AAAA.\n\n");
+    return 0; // Formato inválido
+  }
+
+  // Validar limites dos dias, meses e anos (exemplos simples)
+  if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || ano < 2023 || ano > 2050) {
+    printf("\n\t\t\tData fora dos limites esperados.\n\n");
+    return 0; // Data fora dos limites esperados
+  }
+
+  return 1; // Data válida
+}
+
+// Função para validar o formato da hora (HH:mm)
+int validarHora(const char *hora) {
+  int horaInt, minuto;
+  if (sscanf(hora, "%d:%d", &horaInt, &minuto) != 2) {
+    printf("\n\t\t\tFormato de hora inválido. Use o formato HH:MM.\n\n");
+    return 0; // Formato inválido
+  }
+
+  // Validar limites das horas e minutos
+  if (horaInt < 0 || horaInt > 23 || minuto < 0 || minuto > 59) {
+    printf("\n\t\t\tHora fora dos limites esperados.\n\n");
+    return 0; // Hora fora dos limites esperados
+  }
+
+  return 1; // Hora válida
+}
+
+// Função para validar o código do aeroporto (3 letras)
+int validarCodigoAeroporto(const char *codigo) {
+  if (strlen(codigo) != 3) {
+    printf(
+        "\n\t\t\tO código do aeroporto deve ter exatamente 3 caracteres.\n\n");
+    return 0; // Código com tamanho incorreto
+  }
+
+  for (int i = 0; i < 3; ++i) {
+    if (!isalpha(codigo[i])) {
+      printf("\n\t\t\tO código do aeroporto deve conter apenas letras.\n\n");
+      return 0; // Código contém caracteres não alfabéticos
+    }
+  }
+
+  return 1; // Código válido
+}
+
+// Função para validar o valor da passagem (positivo)
+int validarValor(float valor) {
+  if (valor < 100) {
+    printf("\n\t\t\tO valor da passagem deve ser um número positivo e "
+           "condizente com a "
+           "realidade.\n\n");
+    return 0; // Valor inválido
+  }
+  return 1; // Valor válido
+}
+
+// // // ---------------------------------------------------->
+
+// Função para formatar as palavras
+void capitalizarPalavra(char *palavra) {
+  int tamanho = strlen(palavra);
+  int proximoDeveSerMaiusculo = 1; // Flag para próxima letra maiúscula
+
+  for (int i = 0; i < tamanho; i++) {
+    if (proximoDeveSerMaiusculo && isalpha(palavra[i])) {
+      palavra[i] = toupper(palavra[i]);
+      proximoDeveSerMaiusculo = 0;
+    } else if (isspace(palavra[i])) {
+      proximoDeveSerMaiusculo = 1;
+    } else {
+      palavra[i] = tolower(palavra[i]);
+      proximoDeveSerMaiusculo = 0;
+    }
+  }
+}
+
+// ---------------------------------------------------------->
+
+void capitalizarCodigo(char *codigo) {
+  for (int i = 0; i < 3; ++i) {
+    codigo[i] = toupper(codigo[i]);
+  }
+}
+
+// // // ---------------------------------------------------->
+
+// Função para CADASTRAR uma nova passagem
+void cadastrarPassagem() {
+  Passagem novaPassagem;
+
+  // Capturando informações do usuário
+
+  do {
+    printf("Digite o código do aeroporto de origem (3 letras): ");
+    scanf("%s", novaPassagem.codigoOrigem);
+    validarCodigoAeroporto(
+        novaPassagem.codigoOrigem); // Confere se é correspondente
+    capitalizarCodigo(novaPassagem.codigoOrigem); // Converter para maiúsculas
+  } while (!validarCodigoAeroporto(novaPassagem.codigoOrigem));
+
+  do {
+    printf("Digite o código do aeroporto de destino (3 letras): ");
+    scanf("%s", novaPassagem.codigoDestino);
+    validarCodigoAeroporto(
+        novaPassagem.codigoDestino); // Confere se é correspondente
+    capitalizarCodigo(novaPassagem.codigoDestino); // Converter para maiúsculas
+  } while (!validarCodigoAeroporto(novaPassagem.codigoDestino));
+
+  // Limpar o buffer do teclado
+  getchar();
+
+  printf("Digite a cidade de origem: ");
+  scanf("%[^\n]", novaPassagem.cidadeOrigem);
+  capitalizarPalavra(
+      novaPassagem.cidadeOrigem); // Converter a primeira letra para maiúsculas
+
+  // Limpar o buffer do teclado
+  getchar();
+
+  printf("Digite a cidade de destino: ");
+  scanf("%[^\n]", novaPassagem.cidadeDestino);
+  capitalizarPalavra(
+      novaPassagem.cidadeDestino); // Converter a primeira letra para maiúsculas
+
+  do {
+    printf("Digite a data (DD/MM/YYYY): ");
+    scanf("%s", novaPassagem.data);
+    validarData(novaPassagem.data); // Confere se é correspondente
+  } while (!validarData(novaPassagem.data));
+
+  do {
+    printf("Digite a hora de partida (HH:mm): ");
+    scanf("%s", novaPassagem.horaPartida);
+    validarHora(novaPassagem.horaPartida); // Confere se é correspondente
+  } while (!validarHora(novaPassagem.horaPartida));
+
+  do {
+    printf("Digite a hora de chegada (HH:mm): ");
+    scanf("%s", novaPassagem.horaChegada);
+    validarHora(novaPassagem.horaChegada); // Confere se é correspondente
+  } while (!validarHora(novaPassagem.horaChegada));
+
+  do {
+    printf("Digite o valor da passagem: ");
+    scanf("%f", &novaPassagem.valorPassagem);
+    validarValor(novaPassagem.valorPassagem); // Confere se é correspondente
+  } while (!validarValor(novaPassagem.valorPassagem));
+
+  FILE *arquivo = fopen("passagens.txt", "r+");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens = 0;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Lê a quantidade de passagens
+
+  int ultimoID = 0;
+  if (quantidadePassagens > 0) {
+    fseek(arquivo,
+          -1 * (sizeof(int) + 3 * sizeof(char) * 4 + 2 * sizeof(char) * 50 +
+                sizeof(char) * 11 + 2 * sizeof(char) * 6 + sizeof(float)),
+          SEEK_END);
+    fscanf(arquivo,
+           "\n%d;%*[^;];%*[^;];%*[^;];%*[^;];%*[^;];%*[^;];%*[^;];%*[^;];",
+           &ultimoID);
+
+    // Definir o ID da nova passagem somando 1 ao último ID lido do arquivo
+    novaPassagem.ID = ultimoID + 1;
+  } else {
+    // Se não houver passagens, inicia o ID em 1
+    novaPassagem.ID = 1;
+  }
+
+  // Move o cursor para o fim do arquivo para adicionar a nova passagem
+  fseek(arquivo, 0, SEEK_END);
+  fprintf(arquivo, "\n%d;%s;%s;%s;%s;%s;%s;%s;%.2f", novaPassagem.ID,
+          novaPassagem.codigoOrigem, novaPassagem.codigoDestino,
+          novaPassagem.cidadeOrigem, novaPassagem.cidadeDestino,
+          novaPassagem.data, novaPassagem.horaPartida, novaPassagem.horaChegada,
+          novaPassagem.valorPassagem);
+
+  // Atualiza a quantidade de passagens no início do arquivo
+  fseek(arquivo, 0, SEEK_SET);
+  fprintf(arquivo, "%d", quantidadePassagens + 1);
+
+  // Atualizar o último ID na segunda linha do arquivo
+  fprintf(arquivo, "\n%d", novaPassagem.ID);
+
+  fclose(arquivo);
+  printf("\n\t\t\tPassagem cadastrada com sucesso!\n");
+}
+
+// // // ---------------------------------------------------->
+
+// Função para LISTAR todas as passagens
+void listarPassagens() {
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  printf("\n\n\t\t\tLista de Passagens:\n");
+
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    printf("Passagem %d:\n", passagem.ID);
+    printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+    printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+           passagem.codigoDestino);
+    printf("Data: %s\n", passagem.data);
+    printf("Hora Partida: %s\n", passagem.horaPartida);
+    printf("Hora Chegada: %s\n", passagem.horaChegada);
+    printf("Valor: %.2f\n", passagem.valorPassagem);
+    printf("--- --- --- --- --- --- --- --- ---\n");
+  }
+
+  fclose(arquivo);
+}
+
+// // // ---------------------------------------------------->
+
+// Funçoes de PESQUISA por tipos diferentes
+
+// Funçaõ de pesquisa por ID
+void pesquisarPorID() {
+  int id;
+  printf("\nDigite o ID da passagem: ");
+  scanf("%i", &id);
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%i", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  int encontrado = 0; // Flag para indicar se a passagem foi encontrada
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    if (passagem.ID == id) {
+      encontrado = 1;
+      printf("\n\n\t\t\tPassagem encontrada!\n");
+      printf("ID: %d\n", passagem.ID);
+      printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+      printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+             passagem.codigoDestino);
+      printf("Data: %s\n", passagem.data);
+      printf("Hora Partida: %s\n", passagem.horaPartida);
+      printf("Hora Chegada: %s\n", passagem.horaChegada);
+      printf("Valor: %.2f\n", passagem.valorPassagem);
+      break;
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrado) {
+    printf("\n\n\t\t\tPassagem com ID %d não encontrada.\n", id);
+  }
+}
+
+// ---------------------------------------------------------->
+
+void pesquisarPorAeroportoOrigem() {
+  char codigoOrigem[4];
+  printf("Digite o código do aeroporto de origem (3 letras): ");
+  scanf("%s", codigoOrigem);
+
+  // Converter o código de origem digitado para maiúsculas
+  for (int i = 0; codigoOrigem[i] != '\0'; i++) {
+    codigoOrigem[i] = toupper(codigoOrigem[i]);
+  }
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  int encontrado = 0; // Flag para indicar se a passagem foi encontrada
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    if (strcmp(passagem.codigoOrigem, codigoOrigem) == 0) {
+      encontrado = 1;
+      printf("\n\n\t\t\tPassagem encontrada!\n");
+      printf("ID: %d\n", passagem.ID);
+      printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+      printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+             passagem.codigoDestino);
+      printf("Data: %s\n", passagem.data);
+      printf("Hora Partida: %s\n", passagem.horaPartida);
+      printf("Hora Chegada: %s\n", passagem.horaChegada);
+      printf("Valor: %.2f\n", passagem.valorPassagem);
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrado) {
+    printf("\n\n\t\t\tPassagem com origem no aeroporto %s não encontrada.\n",
+           codigoOrigem);
+  }
+}
+
+// ---------------------------------------------------------->
+
+void pesquisarPorAeroportoDestino() {
+  char codigoDestino[4];
+  printf("Digite o código do aeroporto de destino (3 letras): ");
+  scanf("%s", codigoDestino);
+
+  // Converter o código de destino para maiúsculas
+  for (int i = 0; i < 3; ++i) {
+    codigoDestino[i] = toupper(codigoDestino[i]);
+  }
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  int encontrado = 0; // Flag para indicar se a passagem foi encontrada
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    if (strcmp(passagem.codigoDestino, codigoDestino) == 0) {
+      encontrado = 1;
+      printf("\n\n\t\t\tPassagem encontrada!\n");
+      printf("ID: %d\n", passagem.ID);
+      printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+      printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+             passagem.codigoDestino);
+      printf("Data: %s\n", passagem.data);
+      printf("Hora Partida: %s\n", passagem.horaPartida);
+      printf("Hora Chegada: %s\n", passagem.horaChegada);
+      printf("Valor: %.2f\n", passagem.valorPassagem);
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrado) {
+    printf("\n\n\t\t\tPassagem com destino no aeroporto %s não encontrada.\n",
+           codigoDestino);
+  }
+}
+
+// ---------------------------------------------------------->
+
+void pesquisarPorCidadeOrigem() {
+  char cidadeOrigem[50];
+  printf("Digite o nome da cidade de origem: ");
+  scanf(" %[^\n]", cidadeOrigem);
+
+  // Converte a cidade de origem lida para o formato correto
+  capitalizarPalavra(cidadeOrigem);
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  int encontrado = 0; // Flag para indicar se a passagem foi encontrada
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    if (strcmp(passagem.cidadeOrigem, cidadeOrigem) == 0) {
+      encontrado = 1;
+      printf("\n\n\t\t\tPassagem encontrada!\n");
+      printf("ID: %d\n", passagem.ID);
+      printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+      printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+             passagem.codigoDestino);
+      printf("Data: %s\n", passagem.data);
+      printf("Hora Partida: %s\n", passagem.horaPartida);
+      printf("Hora Chegada: %s\n", passagem.horaChegada);
+      printf("Valor: %.2f\n", passagem.valorPassagem);
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrado) {
+    printf("\n\n\t\t\tPassagem com origem na cidade %s não encontrada.\n",
+           cidadeOrigem);
+  }
+}
+
+// ---------------------------------------------------------->
+
+void pesquisarPorCidadeDestino() {
+  char cidadeDestino[50];
+  printf("Digite o nome da cidade de destino: ");
+  scanf("%[^\n]", cidadeDestino);
+
+  // Converte a cidade de origem lida para o formato correto
+  capitalizarPalavra(cidadeDestino);
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens); // Ler a quantidade de passagens
+
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID); // Ler o último ID
+
+  int encontrado = 0; // Flag para indicar se a passagem foi encontrada
+  for (int i = 0; i < quantidadePassagens; ++i) {
+    Passagem passagem;
+    fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f",
+           &passagem.ID, passagem.codigoOrigem, passagem.codigoDestino,
+           passagem.cidadeOrigem, passagem.cidadeDestino, passagem.data,
+           passagem.horaPartida, passagem.horaChegada, &passagem.valorPassagem);
+
+    if (strcmp(passagem.cidadeDestino, cidadeDestino) == 0) {
+      encontrado = 1;
+      printf("\n\n\t\t\tPassagem encontrada!\n");
+      printf("ID: %d\n", passagem.ID);
+      printf("Origem: %s (%s)\n", passagem.cidadeOrigem, passagem.codigoOrigem);
+      printf("Destino: %s (%s)\n", passagem.cidadeDestino,
+             passagem.codigoDestino);
+      printf("Data: %s\n", passagem.data);
+      printf("Hora Partida: %s\n", passagem.horaPartida);
+      printf("Hora Chegada: %s\n", passagem.horaChegada);
+      printf("Valor: %.2f\n", passagem.valorPassagem);
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrado) {
+    printf("\n\n\t\t\tPassagem com destino na cidade %s não encontrada.\n",
+           cidadeDestino);
+  }
+}
+
+// ---------------------------------------------------------->
+
+// Função para pesquisar uma passagem
+void pesquisarPassagem() {
+  int opcao;
+  printf("\n\n\t--- Escolha o critério de pesquisa ---\n");
+  printf("1. Pesquisar por ID\n");
+  printf("2. Pesquisar por aeroporto de origem\n");
+  printf("3. Pesquisar por aeroporto de destino\n");
+  printf("4. Pesquisar por cidade de origem\n");
+  printf("5. Pesquisar por cidade de destino\n");
+  printf("\nOpção: ");
+  scanf("%d", &opcao);
+
+  switch (opcao) {
+  case 1:
+    // Pesquisar por ID
+    pesquisarPorID();
+    break;
+  case 2:
+    // Pesquisar por aeroporto de origem
+    pesquisarPorAeroportoOrigem();
+    break;
+  case 3:
+    // Pesquisar por aeroporto de destino
+    pesquisarPorAeroportoDestino();
+    break;
+  case 4:
+    // Pesquisar por cidade de origem
+    pesquisarPorCidadeOrigem();
+    break;
+  case 5:
+    // Pesquisar por cidade de destino
+    pesquisarPorCidadeDestino();
+    break;
+  default:
+    printf("\n\t\t\tOpção inválida!\n");
+  }
+}
+
+// // // ---------------------------------------------------->
+
+// Função para EDITAR uma passagem existente
+void editarPassagem() {
+  int idParaEditar;
+  printf("Digite o ID da passagem a ser editada: ");
+  scanf("%d", &idParaEditar);
+
+  FILE *arquivo = fopen("passagens.txt", "r+");
+  if (arquivo == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int encontrou = 0;        // Flag para indicar se a passagem foi encontrada
+  long posicaoAnterior = 0; // Armazena a posição da passagem anterior
+
+  // Variáveis para armazenar os dados da passagem a ser editada
+  int id;
+  char codigoOrigem[4];
+  char codigoDestino[4];
+  char cidadeOrigem[50];
+  char cidadeDestino[50];
+  char data[11];
+  char horaPartida[6];
+  char horaChegada[6];
+  float valorPassagem;
+
+  while (fscanf(arquivo, "%d;%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%[^;];%f", &id,
+                codigoOrigem, codigoDestino, cidadeOrigem, cidadeDestino, data,
+                horaPartida, horaChegada, &valorPassagem) != EOF) {
+    if (id == idParaEditar) {
+      encontrou = 1;
+
+      // Solicita ao usuário as novas informações para a passagem
+      printf("\n\t\t\tPassagem encontrada! Atualize os dados:\n\n");
+
+      // Solicita ao usuário as novas informações para a passagem
+      do {
+        printf("Novo Código do Aeroporto de Origem (3 letras): ");
+        scanf("%s", codigoOrigem);
+        validarCodigoAeroporto(codigoOrigem);
+        capitalizarCodigo(codigoOrigem);
+      } while (!validarCodigoAeroporto(codigoOrigem));
+
+      do {
+        printf("Novo Código do Aeroporto de Destino (3 letras): ");
+        scanf("%s", codigoDestino);
+        validarCodigoAeroporto(codigoDestino);
+        capitalizarCodigo(codigoDestino);
+      } while (!validarCodigoAeroporto(codigoDestino));
+
+      getchar();
+
+      printf("Nova Cidade de Origem: ");
+      scanf("%[^\n]", cidadeOrigem);
+      capitalizarPalavra(cidadeOrigem);
+
+      getchar();
+
+      printf("Nova Cidade de Destino: ");
+      scanf("%[^\n]", cidadeDestino);
+      capitalizarPalavra(cidadeDestino);
+
+      getchar();
+
+      do {
+        printf("Nova Data (DD/MM/YYYY): ");
+        scanf("%s", data);
+      } while (!validarData(data));
+
+      do {
+        printf("Nova Hora de Partida (HH:mm): ");
+        scanf("%s", horaPartida);
+      } while (!validarHora(horaPartida));
+
+      do {
+        printf("Nova Hora de Chegada (HH:mm): ");
+        scanf("%s", horaChegada);
+      } while (!validarHora(horaChegada));
+
+      do {
+        printf("Novo Valor da Passagem: ");
+        scanf("%f", &valorPassagem);
+      } while (!validarValor(valorPassagem));
+
+      // Move o cursor para a posição anterior e escreve sobre a linha
+      if (fseek(arquivo, posicaoAnterior, SEEK_SET) != 0) {
+        printf("Erro ao posicionar o cursor no arquivo!\n");
+        fclose(arquivo);
+        return;
+      }
+
+      fprintf(arquivo, "\n%d;%s;%s;%s;%s;%s;%s;%s;%.2f\n", id, codigoOrigem,
+              codigoDestino, cidadeOrigem, cidadeDestino, data, horaPartida,
+              horaChegada, valorPassagem);
+
+      break; // Sai do loop após editar a passagem
+    } else {
+      // Se não for a passagem a ser editada, atualiza a posição
+      posicaoAnterior = ftell(arquivo);
+    }
+  }
+
+  fclose(arquivo);
+
+  if (!encontrou) {
+    printf("\n\t\t\tPassagem não encontrada!\n");
+    return;
+  }
+
+  printf("\n\t\t\tPassagem editada com sucesso!\n");
+}
+
+// // // ---------------------------------------------------->
+
+// Função para EXCLUIR uma passagem existente
+void excluirPassagem() {
+  int idParaExcluir;
+  printf("\nDigite o ID da passagem a ser excluída: ");
+  scanf("%d", &idParaExcluir);
+
+  FILE *arquivo = fopen("passagens.txt", "r");
+  FILE *temp = fopen("temp.txt", "w");
+
+  if (arquivo == NULL || temp == NULL) {
+    printf("Erro ao abrir o arquivo!\n");
+    return;
+  }
+
+  int quantidadePassagens;
+  fscanf(arquivo, "%d", &quantidadePassagens);
+  int ultimoID;
+  fscanf(arquivo, "%d", &ultimoID);
+
+  int passagensRestantes = 0; // Contador para passagens não excluídas
+
+  // Escreve as duas primeiras linhas no arquivo temporário
+  fprintf(temp, "%d\n%d\n", passagensRestantes, ultimoID);
+
+  int idAtual;
+  int encontrou = 0; // Flag para indicar se a passagem foi encontrada
+
+  while (fscanf(arquivo, "%d", &idAtual) != EOF) {
+    // Se o ID lido for igual ao ID para excluir, não copia essa linha para o arquivo temporário
+
+    if (idAtual == idParaExcluir) {
+      encontrou = 1;
+      // Pula a linha atual completamente
+      fseek(arquivo, 1, SEEK_CUR);
+      while (fgetc(arquivo) != '\n') {
+      } // Avança até o final da linha
+    } else {
+      passagensRestantes++; // Incrementa o contador de passagens não excluídas
+      fprintf(temp, "%d", idAtual);
+      char c;
+      while ((c = fgetc(arquivo)) != '\n' && c != EOF) {
+        fprintf(temp, "%c", c);
+      }
+      fprintf(temp, "\n");
+    }
+  }
+
+  fscanf(arquivo, "%d", &ultimoID);
+
+  // Atualiza a quantidade de passagens no arquivo temporário
+  fseek(temp, 0, SEEK_SET);
+  fprintf(temp, "%d\n%d\n", passagensRestantes, ultimoID);
+
+  fclose(arquivo);
+  fclose(temp);
+
+  // Remove o arquivo original e renomeia o arquivo temporário
+  remove("passagens.txt");
+  rename("temp.txt", "passagens.txt");
+
+  if (!encontrou) {
+    printf("\n\t\t\tPassagem não encontrada!\n");
+  } else {
+    printf("\n\t\t\tPassagem excluída com sucesso!\n");
+  }
+}
+
+// // // ---------------------------------------------------->
+
+// Função principal (Menu)
+int main() {
+  int opcao;
+
+  do {
+    printf("\n\t\t\t--- MENU ---\n");
+    printf("1. Listar todas as passagens\n");
+    printf("2. Pesquisar uma passagem\n");
+    printf("3. Cadastrar uma passagem\n");
+    printf("4. Editar uma passagem\n");
+    printf("5. Excluir uma passagem\n");
+    printf("6. Sair do programa\n");
+    printf("\nEscolha uma opcao: ");
+    scanf("%d", &opcao);
+
+    switch (opcao) {
+    case 1:
+      listarPassagens();
+      break;
+    case 2:
+      pesquisarPassagem();
+      break;
+    case 3:
+      cadastrarPassagem();
+      break;
+    case 4:
+      editarPassagem();
+      break;
+    case 5:
+      excluirPassagem();
+      break;
+    case 6:
+      printf("Encerrando o programa...\n");
+      break;
+    default:
+      printf("Opcao invalida! Tente novamente.\n");
+    }
+  } while (opcao != 6);
+
+  return 0;
+}
 
